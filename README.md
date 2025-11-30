@@ -115,9 +115,3 @@ README.md
 ```bash
 pytest -q
 ```
-
-## Notas rápidas
-
-- Comentarios breves en español en el código para facilitar lectura.
-- El pipeline trata igual las secuencias vengan de MIDI o de texto gracias a `encoding.py`.
-- Gráficas no son obligatorias; puedes usar las métricas locales para construirlas con tu stack preferido.
