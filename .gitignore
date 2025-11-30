@@ -1,0 +1,42 @@
+.venv/
+env/
+venv/
+ENV/
+
+# Python compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+wheels/
+
+# PyInstaller / setup artifacts
+*.spec
+*.manifest
+
+# Test & coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# IDE / tooling
+.idea/
+.vscode/
+.mypy_cache/
+.DS_Store
+
+# Data / notebooks
+.ipynb_checkpoints/
+
+# Local configs
+.env
+.python-version
