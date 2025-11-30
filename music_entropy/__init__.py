@@ -7,6 +7,7 @@ __all__ = [
     "entropy",
     "lzc",
     "analysis",
+    "visualization",
 ]
 
 __version__ = "0.1.0"

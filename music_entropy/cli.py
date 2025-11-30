@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 from typing import List
 
+from . import visualization
 from .analysis import AnalysisConfig, analyze_folder, analyze_piece, results_to_dataframe
 
 
@@ -44,6 +45,17 @@ def _save_local_csv(res, path: Path) -> None:
     df.to_csv(path, index=False)
 
 
+def _maybe_plot_result(res, plot_dir: str | None) -> None:
+    if not plot_dir:
+        return
+    base = Path(plot_dir)
+    base.mkdir(parents=True, exist_ok=True)
+    stem = Path(res.path).stem or "output"
+    visualization.plot_global_metrics(res, base / f"{stem}_global.png")
+    if res.local:
+        visualization.plot_local_entropies(res, base / f"{stem}_local.png")
+
+
 def handle_analyze(args: argparse.Namespace) -> int:
     cfg = _config_from_args(args)
     res = analyze_piece(args.input, input_type=args.input_type, config=cfg)
@@ -55,6 +67,7 @@ def handle_analyze(args: argparse.Namespace) -> int:
         _save_local_csv(res, Path(args.local_csv))
     if args.output_json:
         Path(args.output_json).write_text(json.dumps(res.to_dict(), indent=2), encoding="utf-8")
+    _maybe_plot_result(res, args.plot_dir)
     return 0
 
 
@@ -66,6 +79,7 @@ def handle_analyze_batch(args: argparse.Namespace) -> int:
         return 1
     for res in results:
         _print_result(res)
+        _maybe_plot_result(res, args.plot_dir)
     if args.output_csv:
         df = results_to_dataframe(results)
         df.to_csv(args.output_csv, index=False)
@@ -102,6 +116,7 @@ def build_parser() -> argparse.ArgumentParser:
     analyze.add_argument("--output-csv", help="Path to save global metrics CSV.")
     analyze.add_argument("--local-csv", help="Path to save local metrics CSV.")
     analyze.add_argument("--output-json", help="Path to save JSON summary.")
+    analyze.add_argument("--plot-dir", help="Directory to store generated PNG plots.")
 
     analyze_batch = subparsers.add_parser("analyze-batch", help="Analyze all files in a folder.")
     analyze_batch.add_argument("--input", required=True, help="Folder path.")
@@ -116,6 +131,7 @@ def build_parser() -> argparse.ArgumentParser:
     analyze_batch.add_argument("--local", action="store_true", help="Compute local entropies.")
     analyze_batch.add_argument("--output-csv", help="Path to save global metrics CSV.")
     analyze_batch.add_argument("--local-csv", help="Path to save local metrics CSV.")
+    analyze_batch.add_argument("--plot-dir", help="Directory to store generated PNG plots.")
     return parser
 
 
