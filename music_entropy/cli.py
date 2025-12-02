@@ -77,9 +77,53 @@ def handle_analyze_batch(args: argparse.Namespace) -> int:
     if not results:
         print("No files processed.", file=sys.stderr)
         return 1
+    
+    # Print results to console
     for res in results:
         _print_result(res)
-        _maybe_plot_result(res, args.plot_dir)
+    
+    # Generate individual plots in song-specific folders
+    if args.plot_dir:
+        base = Path(args.plot_dir)
+        for res in results:
+            # Create individual folder for each song
+            stem = Path(res.path).stem or "output"
+            song_folder = base / stem
+            song_folder.mkdir(parents=True, exist_ok=True)
+            
+            # Save plots in song folder
+            visualization.plot_global_metrics(res, song_folder / f"{stem}_global.png")
+            if res.local:
+                visualization.plot_local_entropies(res, song_folder / f"{stem}_local.png")
+    
+    # Generate batch summary folder with compiled plots and CSV
+    if args.plot_dir:
+        base = Path(args.plot_dir)
+        batch_folder = base / "batch"
+        batch_folder.mkdir(parents=True, exist_ok=True)
+        
+        # Always generate CSV in batch folder
+        csv_path = batch_folder / "batch_results.csv"
+        df = results_to_dataframe(results)
+        df.to_csv(csv_path, index=False)
+        print(f"\nBatch results CSV saved: {csv_path}")
+        
+        # Generate batch comparison plots if requested
+        if args.batch_plot:
+            batch_plot_path = batch_folder / "batch_comparison.png"
+            visualization.plot_batch_comparison(results, batch_plot_path)
+            print(f"Batch comparison plot saved: {batch_plot_path}")
+            
+            # Generate local averages plot if local metrics are available
+            if any(r.local for r in results):
+                local_avg_path = batch_folder / "batch_local_averages.png"
+                try:
+                    visualization.plot_batch_local_averages(results, local_avg_path)
+                    print(f"Batch local averages plot saved: {local_avg_path}")
+                except ValueError as e:
+                    print(f"Warning: Could not generate local averages plot: {e}", file=sys.stderr)
+    
+    # Handle legacy CSV options (for backward compatibility)
     if args.output_csv:
         df = results_to_dataframe(results)
         df.to_csv(args.output_csv, index=False)
@@ -132,6 +176,7 @@ def build_parser() -> argparse.ArgumentParser:
     analyze_batch.add_argument("--output-csv", help="Path to save global metrics CSV.")
     analyze_batch.add_argument("--local-csv", help="Path to save local metrics CSV.")
     analyze_batch.add_argument("--plot-dir", help="Directory to store generated PNG plots.")
+    analyze_batch.add_argument("--batch-plot", action="store_true", help="Generate a comparison plot for all files.")
     return parser
 
 

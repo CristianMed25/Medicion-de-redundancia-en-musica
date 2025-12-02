@@ -90,11 +90,15 @@ def analyze_folder(
     pattern: str = "*",
 ) -> List[AnalysisResult]:
     """Analyze all compatible files in a folder."""
+    import sys
+    
     cfg = config or AnalysisConfig()
     base = Path(folder)
     if not base.exists():
         raise FileNotFoundError(f"Folder not found: {base}")
     results: List[AnalysisResult] = []
+    failed_files: List[tuple[Path, str]] = []
+    
     for path in sorted(base.glob(pattern)):
         if path.is_dir():
             continue
@@ -102,8 +106,23 @@ def analyze_folder(
             continue
         if input_type in {"json", "csv"} and path.suffix.lower() != f".{input_type}":
             continue
-        res = analyze_piece(path, input_type=input_type, config=cfg)
-        results.append(res)
+        
+        try:
+            res = analyze_piece(path, input_type=input_type, config=cfg)
+            results.append(res)
+        except Exception as e:
+            # Log the error and continue with next file
+            error_msg = f"{type(e).__name__}: {str(e)}"
+            failed_files.append((path, error_msg))
+            print(f"Warning: Skipping {path.name} - {error_msg}", file=sys.stderr)
+            continue
+    
+    # Print summary of failed files if any
+    if failed_files:
+        print(f"\n{len(failed_files)} file(s) failed to process:", file=sys.stderr)
+        for failed_path, error in failed_files:
+            print(f"  - {failed_path.name}: {error}", file=sys.stderr)
+    
     return results
 
 
