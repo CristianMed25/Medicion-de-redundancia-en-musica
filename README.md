@@ -22,6 +22,10 @@ Comandos principales:
   ```bash
   python -m music_entropy analyze-batch --input carpeta/ --input-type midi --pattern "*.mid" --plot-dir outputs/plots
   ```
+- Analizar una carpeta con gráfica comparativa:
+  ```bash
+  python -m music_entropy analyze-batch --input carpeta/ --input-type midi --pattern "*.mid" --plot-dir outputs/plots --batch-plot
+  ```
 
 Parametros clave:
 - `--markov-order`: orden k del modelo de Markov para Hk.
@@ -29,20 +33,33 @@ Parametros clave:
 - `--window-size` / `--window-step`: ventana y desplazamiento para entropias locales (`--local` las activa).
 - `--output-csv`, `--local-csv`, `--output-json`: exportar metricas numericas.
 - `--plot-dir`: guarda automaticamente graficas PNG (globales y, si existen, locales) en la carpeta indicada.
+- `--batch-plot`: genera una grafica comparativa de todos los archivos (solo para `analyze-batch`).
 
 Tambien puedes usar el entrypoint instalado: `music-entropy analyze ...`.
 
 ## Graficas automaticas
 
-El modulo `music_entropy.visualization` genera dos tipos de grafico por archivo analizado:
+El modulo `music_entropy.visualization` genera los siguientes tipos de graficos:
+
+### Por archivo individual:
 - **Perfil global**: barras con H0, Hk, Hmax, Redundancy, IP, LZC y LZC normalizada.
 - **Entropias locales**: line plot con H0 y Hk por ventana (requiere `--local`).
+
+### Para analisis de carpetas completas (con `--batch-plot`):
+- **Promedios globales**: grafica de barras mostrando valores promedio de todas las metricas (H0, Hk, Hmax, Redundancia, Predictibilidad, LZC normalizada) calculados a partir de todos los archivos. Se guarda como `batch_comparison.png`.
+- **Promedios de entropías locales**: grafica de lineas mostrando la evolucion temporal promedio de H0 y Hk por ventana (requiere `--local`). Se guarda como `batch_local_averages.png`.
 
 Ejemplo rapido:
 ```bash
 python -m music_entropy analyze --input examples/sample_sequence.json --input-type json --local --plot-dir reports/plots
 ```
 Esto crea `reports/plots/sample_sequence_global.png` y, como se pidieron metricas locales, `reports/plots/sample_sequence_local.png`.
+
+Ejemplo con carpeta completa:
+```bash
+python -m music_entropy analyze-batch --input examples/ --input-type midi --pattern "*.mid" --plot-dir reports/plots --batch-plot --local
+```
+Esto genera graficas individuales para cada archivo, una grafica de promedios globales `batch_comparison.png`, y una grafica de promedios de entropias locales `batch_local_averages.png`.
 
 ## Formatos de entrada
 
