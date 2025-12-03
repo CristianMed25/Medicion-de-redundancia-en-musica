@@ -102,21 +102,24 @@ def handle_analyze_batch(args: argparse.Namespace) -> int:
         batch_folder = base / "batch"
         batch_folder.mkdir(parents=True, exist_ok=True)
         
+        # Get folder name for filenames
+        folder_name = Path(args.input).name
+        
         # Always generate CSV in batch folder
-        csv_path = batch_folder / "batch_results.csv"
+        csv_path = batch_folder / f"{folder_name}_batch_results.csv"
         df = results_to_dataframe(results)
         df.to_csv(csv_path, index=False)
         print(f"\nBatch results CSV saved: {csv_path}")
         
         # Generate batch comparison plots if requested
         if args.batch_plot:
-            batch_plot_path = batch_folder / "batch_comparison.png"
+            batch_plot_path = batch_folder / f"{folder_name}_batch_comparison.png"
             visualization.plot_batch_comparison(results, batch_plot_path)
             print(f"Batch comparison plot saved: {batch_plot_path}")
             
             # Generate local averages plot if local metrics are available
             if any(r.local for r in results):
-                local_avg_path = batch_folder / "batch_local_averages.png"
+                local_avg_path = batch_folder / f"{folder_name}_batch_local_averages.png"
                 try:
                     visualization.plot_batch_local_averages(results, local_avg_path)
                     print(f"Batch local averages plot saved: {local_avg_path}")

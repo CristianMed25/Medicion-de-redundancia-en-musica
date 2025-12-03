@@ -127,6 +127,11 @@ def analyze_folder(
 
 
 def results_to_dataframe(results: Sequence[AnalysisResult]) -> pd.DataFrame:
-    """Convert results list to pandas DataFrame."""
-    data = [r.to_dict() for r in results]
+    """Convert results list to pandas DataFrame, excluding local window data."""
+    data = []
+    for r in results:
+        row = r.to_dict()
+        # Remove the 'local' column as it contains window-specific data
+        row.pop('local', None)
+        data.append(row)
     return pd.DataFrame(data)
